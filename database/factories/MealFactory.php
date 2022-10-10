@@ -20,9 +20,7 @@ class MealFactory extends Factory
     {
         static $id = 1;
         $locales = Language::pluck('locale');
-        $create = [
-            'status' => $this->faker->randomElement(['deleted', 'created', 'updated'])
-        ];
+        $create = [];
         foreach ($locales as $locale) {
             $create += [$locale => [
                 'title' => 'Meal ' . $id . ' ' . $locale,

@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('meals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->unsigned()->nullable();
-            $table->string('status');
 
+            $table->softDeletes();
             $table->foreign('category_id')->references('id')->on('categories');
             $table->timestamps();
         });

@@ -16,12 +16,22 @@ class MealResource extends JsonResource
      */
     public function toArray($request)
     {
+        $status = 'created';
+        $diff_time = $request->diff_time;
+        if (!is_null($diff_time)) {
+            $deleted_at = strtotime($this->deleted_at);
+            $updated_at = strtotime($this->updated_at);
+            $created_at = strtotime($this->created_at);
+            if ($deleted_at > $diff_time) $status = 'deleted';
+            else if ($updated_at > $diff_time && $updated_at > $created_at) $status = 'updated';
+            else $status = 'created';
+        }
         // Base resource
         $resource = [
             'id' => $this->id,
             'title' => $this->translate()->title,
             'description' => $this->translate()->description,
-            'status' => $this->status
+            'status' => $status
         ];
 
         // Extending the resource, depending on "when" parameter of query

@@ -15,28 +15,22 @@ class MealQuery
         $this->meals = Meal::query();
     }
 
-    public function query(Request $request)
+    public function query($request)
     {
-        // If diff time is set, just continue querying everything, otherwise, get those that aren't deleted.
-        $diff_time = $request->query('diff_time');
-        if (!isset($diff_time)) $this->meals = $this->meals->where('status', '!=', 'deleted');
+        if (array_key_exists('diff_time', $request)) $this->filterByDiffTime($request['diff_time']);
 
-        $category = $request->query('category');
-        if (isset($category)) $this->filterByCategory($category);
+        if (array_key_exists('category', $request)) $this->filterByCategory($request['category']);
 
-        $tags = $request->query('tags');
-        if (isset($tags)) $this->filterByTags($tags);
+        if (array_key_exists('tags', $request)) $this->filterByTags($request['tags']);
 
-        $lang = $request->query('lang');
-        if (isset($lang)) App::setLocale($lang);
+        if (array_key_exists('lang', $request)) App::setLocale($request['lang']);
 
-        $with = $request->query('with');
-        if (isset($with)) $this->setRelations($with);
+        if (array_key_exists('with', $request)) $this->setRelations($request['with']);
 
+        // if (array_key_exists('with', $request)) $this->setRelations($request['with']);
         // If per_page is set, return pagination with that per_page, otherwise, simple paginate() is enough because 
         // query automatically reacts to page parameter
-        $per_page = $request->query('per_page');
-        if (isset($per_page)) return $this->meals->paginate($per_page);
+        if (array_key_exists('per_page', $request)) return $this->meals->paginate($request['per_page']);
         else return $this->meals->paginate();
     }
 
@@ -47,14 +41,12 @@ class MealQuery
         } else if (strtolower($id) == '!null') {
             $this->meals = $this->meals->has('category');
         } else {
-            $this->meals = ($this->meals)->where('category_id', '=', $id);
+            $this->meals = ($this->meals)->where('category_id', '=', intval($id));
         }
     }
 
     private function filterByTags($tags)
     {
-        $tags = array_map('intval', explode(',', $tags));
-
         foreach ($tags as $tag) {
             $this->meals = $this->meals->whereHas('tags', function ($q) use ($tag) {
                 return $q->where('tag_id', $tag);
@@ -64,7 +56,13 @@ class MealQuery
 
     private function setRelations($relations)
     {
-        $relations = explode(',', $relations);
         $this->meals = $this->meals->with($relations);
+    }
+
+    private function filterByDiffTime($diff_time)
+    {
+        $this->meals = $this->meals->withTrashed()->where(function ($query) use ($diff_time) {
+            $query->where('created_at', '>', $diff_time)->orWhere('updated_at', '>', $diff_time)->orWhere('deleted_at', '>', $diff_time);
+        });
     }
 }

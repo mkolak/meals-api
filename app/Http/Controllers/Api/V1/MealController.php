@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use Exception;
 use App\Models\Meal;
+use App\Models\Language;
 use Illuminate\Http\Request;
+use App\Services\V1\MealQuery;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\QueryMealRequest;
 use App\Http\Requests\StoreMealRequest;
 use App\Http\Resources\V1\MealResource;
 use App\Http\Requests\UpdateMealRequest;
 use App\Http\Resources\V1\MealCollection;
-use App\Models\Language;
-use App\Services\V1\MealQuery;
-use App\Services\V1\MealQueryValidator;
-use Exception;
 
 class MealController extends Controller
 {
@@ -21,16 +21,10 @@ class MealController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(QueryMealRequest $request)
     {
-        try {
-            MealQueryValidator::validate($request);
-        } catch (Exception $e) {
-            return response(['error' => true, 'error-msg' => $e->getMessage()], 404);
-        }
-
         $meals = new MealQuery();
-        $meals = $meals->query($request);
+        $meals = $meals->query($request->validated());
 
         return new MealCollection($meals);
     }

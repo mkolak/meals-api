@@ -32,5 +32,8 @@ class MealSeeder extends Seeder
             $ingredients = Ingredient::all()->shuffle()->take(rand(1, 3));
             $meal->ingredients()->attach($ingredients);
         }
+
+        $toDelete = Meal::all()->shuffle()->take(75);
+        foreach ($toDelete as $meal) $meal->delete();
     }
 }
